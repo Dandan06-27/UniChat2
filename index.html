@@ -306,7 +306,7 @@ body{
   const msalConfig = {
     auth: {
       // 🔑 Replace with your Azure App Registration's Application (client) ID
-      clientId: '8fba328c-76a7-4b56-9162-0b201446e210',
+      clientId: 'YOUR_AZURE_CLIENT_ID',
 
       // 'organizations' → only Azure AD org accounts (no personal Microsoft accounts).
       // This is the right choice for university (.edu.ph) accounts.
@@ -328,25 +328,48 @@ body{
     scopes: ['openid', 'profile', 'email', 'User.Read']
   };
 
-  // Initialise MSAL
-  const msalInstance = new msal.PublicClientApplication(msalConfig);
+  // msalInstance is declared at module scope so all functions can reach it,
+  // but it is only assigned after await initialize() completes — this prevents
+  // the "cannot access before initialization" error.
+  let msalInstance = null;
 
-  // Handle redirect response (if you ever switch to redirect flow)
-  msalInstance.handleRedirectPromise()
-    .then(handleMsalResponse)
-    .catch(err => console.error('MSAL redirect error:', err));
+  // ── Boot: create + initialize MSAL, then handle any redirect response ────────
+  (async () => {
+    try {
+      msalInstance = new msal.PublicClientApplication(msalConfig);
+
+      // initialize() MUST be awaited before calling any other MSAL method.
+      // It sets up the internal cache and processes any pending redirect.
+      await msalInstance.initialize();
+
+      // Handle the response if the user was redirected back from Microsoft.
+      // Returns null when using the popup flow (most common case).
+      const redirectResult = await msalInstance.handleRedirectPromise();
+      if (redirectResult) handleMsalResponse(redirectResult);
+
+    } catch (err) {
+      console.error('MSAL init error:', err);
+      showToast('Authentication service failed to load. Please refresh.', '❌', 'error');
+    }
+  })();
 
   // ── Button click handler ─────────────────────────────────────────────────────
   async function signInWithMicrosoft() {
+    if (!msalInstance) {
+      showToast('Auth service still loading — please try again.', '⏳', 'error');
+      return;
+    }
+
     const btn = document.getElementById('msLoginBtn');
     btn.disabled = true;
     btn.querySelector('.ms-btn-inner').textContent = 'Opening Microsoft login…';
 
     try {
-      // Opens the Microsoft login popup
+      // Opens Microsoft's login popup window
       const result = await msalInstance.loginPopup(loginRequest);
       handleMsalResponse(result);
     } catch (err) {
+      // 'user_cancelled' is thrown when the user simply closes the popup — not a real error
       if (err.errorCode !== 'user_cancelled') {
         showToast('Login failed: ' + (err.message || err.errorCode), '❌', 'error');
         console.error('MSAL login error:', err);
