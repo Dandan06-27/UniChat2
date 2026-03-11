@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>UniChain — Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-
-<!-- ✅ Microsoft Authentication Library (MSAL.js v2) -->
+<!-- MSAL loaded synchronously (no async/defer) so it's ready before our script runs -->
 <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -18,49 +16,17 @@
   --border:rgba(46,204,113,0.15);--border2:rgba(46,204,113,0.28);
 }
 html,body{height:100%;font-family:'Sora',sans-serif;}
-body{
-  background:#50C878;
-  color:var(--text);
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;overflow:hidden;position:relative;
-}
-
+body{background:#50C878;color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;position:relative;}
 .blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:0.22;animation:drift 14s ease-in-out infinite;pointer-events:none;}
-.blob1{width:520px;height:520px;background:radial-gradient(circle,#0d6e2e,transparent);top:-180px;left:-120px;animation-delay:0s;}
+.blob1{width:520px;height:520px;background:radial-gradient(circle,#0d6e2e,transparent);top:-180px;left:-120px;}
 .blob2{width:420px;height:420px;background:radial-gradient(circle,#00ff88,transparent);bottom:-120px;right:-100px;animation-delay:-6s;}
 .blob3{width:320px;height:320px;background:radial-gradient(circle,#145c28,transparent);top:45%;left:35%;animation-delay:-10s;}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(18px,25px) scale(1.06);}}
-
-.grid-overlay{
-  position:fixed;inset:0;
-  background-image:
-    linear-gradient(rgba(0,255,136,0.035) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,136,0.035) 1px,transparent 1px);
-  background-size:40px 40px;
-  pointer-events:none;z-index:1;
-}
-
-.wrap{
-  position:relative;z-index:10;
-  display:flex;width:min(900px,94vw);min-height:520px;
-  border-radius:24px;overflow:hidden;
-  box-shadow:0 32px 100px rgba(0,0,0,0.55),0 0 0 1px var(--border);
-  animation:ci 0.7s cubic-bezier(.22,1,.36,1) both;
-}
+.grid-overlay{position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.035) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:1;}
+.wrap{position:relative;z-index:10;display:flex;width:min(900px,94vw);min-height:520px;border-radius:24px;overflow:hidden;box-shadow:0 32px 100px rgba(0,0,0,0.55),0 0 0 1px var(--border);animation:ci 0.7s cubic-bezier(.22,1,.36,1) both;}
 @keyframes ci{from{opacity:0;transform:translateY(28px) scale(0.97);}to{opacity:1;transform:none;}}
-
-/* LEFT PANEL */
-.lp{
-  flex:1.1;
-  background:linear-gradient(150deg,var(--dark3) 0%,var(--mid) 50%,var(--g1) 100%);
-  padding:52px 44px;display:flex;flex-direction:column;
-  position:relative;overflow:hidden;
-}
-.lp::after{
-  content:'';position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2300ff88' fill-opacity='0.03'%3E%3Cpath d='M20 20.5V18H0v5h5v5H0v5h20v-5h15v-5H20zm0-13V5H0v5h5V5h10v5H0v5h20V7.5zM15 0v5H0V0h15zM0 15h10v5H0z'/%3E%3C/g%3E%3C/svg%3E");
-  pointer-events:none;
-}
+.lp{flex:1.1;background:linear-gradient(150deg,var(--dark3) 0%,var(--mid) 50%,var(--g1) 100%);padding:52px 44px;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.lp::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2300ff88' fill-opacity='0.03'%3E%3Cpath d='M20 20.5V18H0v5h5v5H0v5h20v-5h15v-5H20zm0-13V5H0v5h5V5h10v5H0v5h20V7.5zM15 0v5H0V0h15zM0 15h10v5H0z'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none;}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:44px;position:relative;z-index:1;}
 .b-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--g3),var(--accent));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 20px rgba(0,255,136,0.3);}
 .b-name{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--g4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
@@ -74,126 +40,52 @@ body{
 .fdot{width:30px;height:30px;border-radius:9px;flex-shrink:0;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;}
 .cdeco{position:absolute;bottom:-20px;right:-20px;opacity:0.07;pointer-events:none;}
 .lfoot{font-size:0.7rem;color:var(--text3);position:relative;z-index:1;margin-top:32px;}
-
-/* RIGHT PANEL */
-.rp{
-  width:380px;
-  background:rgba(5,14,8,0.97);
-  display:flex;flex-direction:column;justify-content:center;
-  padding:52px 40px;
-  border-left:1px solid var(--border);
-}
+.rp{width:380px;background:rgba(5,14,8,0.97);display:flex;flex-direction:column;justify-content:center;padding:52px 40px;border-left:1px solid var(--border);}
 .rp-t{font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:8px;}
 .rp-s{font-size:0.85rem;color:var(--text2);margin-bottom:32px;line-height:1.6;}
 .rp-s span{color:var(--g4);font-weight:600;}
-
 .ig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
 .ib{padding:13px 12px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);text-align:center;}
 .ib-i{font-size:1.2rem;margin-bottom:5px;}
 .ib-t{font-size:0.68rem;color:var(--text2);line-height:1.4;}
-
-.notice{
-  padding:12px 14px;border-radius:11px;
-  background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.12);
-  display:flex;gap:10px;align-items:flex-start;margin-bottom:26px;
-}
+.notice{padding:12px 14px;border-radius:11px;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.12);display:flex;gap:10px;align-items:flex-start;margin-bottom:26px;}
 .notice p{font-size:0.75rem;color:var(--text2);line-height:1.6;}
 .notice p strong{color:var(--g4);}
-
-/* ✅ Microsoft Sign-In Button */
-.ms-btn{
-  width:100%;
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  padding:14px 20px;
-  background:rgba(255,255,255,0.04);
-  border:1.5px solid var(--border2);
-  border-radius:13px;
-  color:#fff;
-  font-family:'Sora',sans-serif;
-  font-size:0.93rem;font-weight:600;
-  cursor:pointer;
-  transition:all 0.25s;
-  position:relative;overflow:hidden;
-}
-.ms-btn::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(0,120,212,0.14),rgba(0,255,136,0.05));
-  opacity:0;transition:opacity 0.25s;
-}
-.ms-btn:hover{
-  border-color:rgba(0,120,212,0.55);
-  box-shadow:0 8px 28px rgba(0,120,212,0.18);
-  transform:translateY(-2px);
-}
-.ms-btn:hover::before{opacity:1;}
-.ms-btn:active{transform:none;}
-.ms-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none !important;}
+.ms-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 20px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border2);border-radius:13px;color:#fff;font-family:'Sora',sans-serif;font-size:0.93rem;font-weight:600;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+.ms-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,120,212,0.14),rgba(0,255,136,0.05));opacity:0;transition:opacity 0.25s;}
+.ms-btn:hover:not(:disabled){border-color:rgba(0,120,212,0.55);box-shadow:0 8px 28px rgba(0,120,212,0.18);transform:translateY(-2px);}
+.ms-btn:hover:not(:disabled)::before{opacity:1;}
+.ms-btn:active:not(:disabled){transform:none;}
+.ms-btn:disabled{opacity:0.45;cursor:not-allowed;}
 .ms-btn-inner{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
-
-/* Microsoft 4-square logo */
-.ms-logo{
-  width:20px;height:20px;
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:2.5px;flex-shrink:0;
-}
+.ms-logo{width:20px;height:20px;display:grid;grid-template-columns:1fr 1fr;gap:2.5px;flex-shrink:0;}
 .ms-logo span{border-radius:1px;display:block;}
-.sq1{background:#f25022;}
-.sq2{background:#7fba00;}
-.sq3{background:#00a4ef;}
-.sq4{background:#ffb900;}
-
+.sq1{background:#f25022;}.sq2{background:#7fba00;}.sq3{background:#00a4ef;}.sq4{background:#ffb900;}
 .div{display:flex;align-items:center;gap:12px;margin:20px 0 16px;}
 .dl{flex:1;height:1px;background:var(--border);}
 .div span{font-size:0.7rem;color:var(--text3);letter-spacing:1px;}
-
 .rfoot{font-size:0.68rem;color:var(--text3);text-align:center;line-height:1.7;}
 .rfoot a{color:var(--text2);text-decoration:none;}
 .rfoot a:hover{color:var(--g4);}
-
-/* Toast */
-.toast{
-  position:fixed;bottom:28px;left:50%;
-  transform:translateX(-50%) translateY(16px);
-  background:rgba(13,31,20,0.97);border:1px solid var(--border2);
-  color:#fff;padding:13px 22px;border-radius:12px;
-  font-size:0.82rem;font-weight:500;
-  box-shadow:0 16px 50px rgba(0,0,0,0.5);
-  z-index:9999;opacity:0;transition:all 0.3s;
-  display:flex;align-items:center;gap:10px;pointer-events:none;
-  max-width:90vw;
-}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(13,31,20,0.97);border:1px solid var(--border2);color:#fff;padding:13px 22px;border-radius:12px;font-size:0.82rem;font-weight:500;box-shadow:0 16px 50px rgba(0,0,0,0.5);z-index:9999;opacity:0;transition:all 0.3s;display:flex;align-items:center;gap:10px;pointer-events:none;max-width:90vw;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.success{border-color:rgba(46,204,113,0.5);background:rgba(10,35,18,0.97);}
 .toast.error{border-color:rgba(255,80,80,0.35);background:rgba(25,8,8,0.97);}
-
-/* Loading overlay */
-.loading-overlay{
-  display:none;position:fixed;inset:0;z-index:10000;
-  background:rgba(5,14,8,0.88);
-  backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;flex-direction:column;gap:16px;
-}
+.loading-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(5,14,8,0.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .loading-overlay.show{display:flex;}
 .spinner{width:48px;height:48px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--accent);animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-text{color:var(--g4);font-size:0.9rem;font-weight:500;}
 .loading-sub{color:var(--text3);font-size:0.75rem;font-family:'JetBrains Mono',monospace;}
-
-@media(max-width:680px){
-  .lp{display:none;}
-  .rp{width:100%;border-left:none;padding:44px 28px;}
-  .wrap{min-height:auto;}
-}
+@media(max-width:680px){.lp{display:none;}.rp{width:100%;border-left:none;padding:44px 28px;}.wrap{min-height:auto;}}
 </style>
 </head>
 <body>
-
 <div class="blob blob1"></div>
 <div class="blob blob2"></div>
 <div class="blob blob3"></div>
 <div class="grid-overlay"></div>
 
-<!-- Loading overlay -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">Verifying your account…</div>
@@ -201,15 +93,10 @@ body{
 </div>
 
 <div class="wrap">
-
-  <!-- LEFT PANEL -->
   <div class="lp">
     <div class="brand">
       <div class="b-icon">⛓</div>
-      <div>
-        <div class="b-name">UniChain</div>
-        <div class="b-tag">Blockchain Messenger</div>
-      </div>
+      <div><div class="b-name">UniChain</div><div class="b-tag">Blockchain Messenger</div></div>
     </div>
     <div class="hero">
       <h1>Messaging built for<br/><em>university students</em></h1>
@@ -234,39 +121,31 @@ body{
     </svg>
   </div>
 
-  <!-- RIGHT PANEL -->
   <div class="rp">
     <div class="rp-t">Welcome 👋</div>
     <div class="rp-s">Sign in with your <span>.edu.ph Microsoft account</span> to access UniChain.</div>
-
     <div class="ig">
       <div class="ib"><div class="ib-i">🔒</div><div class="ib-t">End-to-End Encrypted</div></div>
       <div class="ib"><div class="ib-i">⛓</div><div class="ib-t">On-Chain Verified</div></div>
       <div class="ib"><div class="ib-i">🎓</div><div class="ib-t">Students Only</div></div>
       <div class="ib"><div class="ib-i">🛡</div><div class="ib-t">Privacy First</div></div>
     </div>
-
     <div class="notice">
       <span style="font-size:16px;flex-shrink:0;">🛡</span>
       <p>Only <strong>@*.edu.ph</strong> Microsoft accounts are allowed. Personal Outlook/Hotmail will be blocked automatically.</p>
     </div>
 
-    <!--
-      ✅ MICROSOFT SIGN-IN BUTTON
-      Clicking triggers MSAL's loginPopup() flow.
-    -->
-    <button class="ms-btn" id="msLoginBtn" onclick="signInWithMicrosoft()">
+    <button class="ms-btn" id="msLoginBtn" onclick="signInWithMicrosoft()" disabled>
       <div class="ms-btn-inner">
         <div class="ms-logo">
           <span class="sq1"></span><span class="sq2"></span>
           <span class="sq3"></span><span class="sq4"></span>
         </div>
-        Sign in with Microsoft
+        <span id="msLoginBtnText">Loading…</span>
       </div>
     </button>
 
     <div class="div"><div class="dl"></div><span>BLOCKCHAIN SECURED</span><div class="dl"></div></div>
-
     <div class="rfoot">
       By signing in you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.<br/>
       UniChain is for academic use only.
@@ -274,163 +153,170 @@ body{
   </div>
 </div>
 
-<!-- Toast notification -->
 <div class="toast" id="toast">
   <span id="toast-icon">⚠</span>
   <span id="toast-msg">Only .edu.ph accounts are allowed.</span>
 </div>
 
-<!--
-  ✅ MICROSOFT AUTHENTICATION (MSAL.js v2)
-  ──────────────────────────────────────────────────────────────────────────────
-  SETUP (one-time, in Azure Portal):
-    1. Go to https://portal.azure.com → Azure Active Directory → App registrations
-    2. Click "New registration"
-       · Name: UniChain
-       · Supported account types: "Accounts in any organizational directory"
-         (allows all .edu.ph tenants, not just one university)
-       · Redirect URI: Single-page application (SPA) → http://localhost or your domain
-    3. After creating, copy the "Application (client) ID"
-    4. Paste it as clientId below (replace YOUR_AZURE_CLIENT_ID)
-
-  AUTH FLOW:
-    1. User clicks button → loginPopup() opens Microsoft's login window
-    2. MSAL returns AuthenticationResult: account + idToken + accessToken
-    3. We read account.username (the UPN / email, e.g. student@dlsu.edu.ph)
-    4. Domain check: must end with .edu.ph → block anything else immediately
-    5. Valid → POST idToken to your backend for server-side JWT verification
-    6. Redirect to landing.html on success
--->
 <script>
-  // ── MSAL Configuration ──────────────────────────────────────────────────────
+  // ── MSAL Configuration ────────────────────────────────────────────────────────
+  // 🔑 Paste your Azure Application (client) ID here
+  const CLIENT_ID = '8fba328c-76a7-4b56-9162-0b201446e210';
+
+  // ⚠️  redirectUri MUST exactly match a URI registered in Azure Portal
+  //     as type "Single-page application (SPA)".
+  //
+  //     If running locally via file://, use 'http://localhost' instead
+  //     and register http://localhost in Azure Portal → Authentication → SPA.
+  //
+  //     If running on a live server, use window.location.origin.
+  const REDIRECT_URI = window.location.protocol === 'file:'
+    ? 'http://localhost'        // local file:// — register http://localhost in Azure
+    : window.location.origin;   // live server  — register your domain in Azure
+
   const msalConfig = {
     auth: {
-      // 🔑 Replace with your Azure App Registration's Application (client) ID
-      clientId: '8fba328c-76a7-4b56-9162-0b201446e210',
-
-      // 'organizations' → only Azure AD org accounts (no personal Microsoft accounts).
-      // This is the right choice for university (.edu.ph) accounts.
-      // Alternative: use your specific tenant ID to lock to one university only.
-      authority: 'https://login.microsoftonline.com/organizations',
-
-      // Must exactly match a Redirect URI registered in Azure portal (SPA type).
-      redirectUri: window.location.origin,
+      clientId:    CLIENT_ID,
+      authority:   'https://login.microsoftonline.com/organizations',
+      redirectUri: REDIRECT_URI,
     },
     cache: {
-      // sessionStorage clears when the tab closes — safer for shared/lab computers.
-      cacheLocation: 'sessionStorage',
+      cacheLocation:        'sessionStorage', // cleared on tab close — good for lab PCs
       storeAuthStateInCookie: false,
+    },
+    system: {
+      loggerOptions: {
+        loggerCallback: (level, message, containsPii) => {
+          if (!containsPii) console.log('[MSAL]', message);
+        },
+        logLevel: msal.LogLevel.Warning,
+      }
     }
   };
 
-  // Scopes: openid + profile + email for identity; User.Read for Microsoft Graph
   const loginRequest = {
-    scopes: ['openid', 'profile', 'email', 'User.Read']
+    scopes: ['openid', 'profile', 'email', 'User.Read'],
   };
 
-  // msalInstance is declared at module scope so all functions can reach it,
-  // but it is only assigned after await initialize() completes — this prevents
-  // the "cannot access before initialization" error.
   let msalInstance = null;
 
-  // ── Boot: create + initialize MSAL, then handle any redirect response ────────
-  (async () => {
+  // ── Boot: runs as soon as the page script executes (MSAL is already loaded) ───
+  (async function boot() {
+    const btnText = document.getElementById('msLoginBtnText');
+    const btn     = document.getElementById('msLoginBtn');
+
     try {
       msalInstance = new msal.PublicClientApplication(msalConfig);
 
-      // initialize() MUST be awaited before calling any other MSAL method.
-      // It sets up the internal cache and processes any pending redirect.
+      // ✅ REQUIRED in MSAL v2.38+ before calling any other method
       await msalInstance.initialize();
 
-      // Handle the response if the user was redirected back from Microsoft.
-      // Returns null when using the popup flow (most common case).
+      // Handles the case where Microsoft redirected back to this page
+      // (only relevant if you switch to loginRedirect instead of loginPopup)
       const redirectResult = await msalInstance.handleRedirectPromise();
-      if (redirectResult) handleMsalResponse(redirectResult);
+      if (redirectResult) {
+        handleMsalResponse(redirectResult);
+        return;
+      }
+
+      // Check if a session already exists (user previously signed in)
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        const email = accounts[0].username || '';
+        if (email.endsWith('.edu.ph')) {
+          showLoading();
+          window.location.href = 'landing.html';
+          return;
+        }
+      }
+
+      // Ready — enable button
+      btnText.textContent = 'Sign in with Microsoft';
+      btn.disabled = false;
 
     } catch (err) {
-      console.error('MSAL init error:', err);
-      showToast('Authentication service failed to load. Please refresh.', '❌', 'error');
+      console.error('[MSAL boot error]', err);
+      // Show the real error message — helps debug Azure config issues
+      const detail = err.errorMessage || err.message || String(err);
+      btnText.textContent = 'Sign in with Microsoft';
+      btn.disabled = false;
+      showToast('Init error: ' + detail, '❌', 'error');
     }
   })();
 
-  // ── Button click handler ─────────────────────────────────────────────────────
+  // ── Sign-in button handler ────────────────────────────────────────────────────
   async function signInWithMicrosoft() {
     if (!msalInstance) {
-      showToast('Auth service still loading — please try again.', '⏳', 'error');
+      showToast('Still loading — please wait a moment and try again.', '⏳', 'error');
       return;
     }
 
-    const btn = document.getElementById('msLoginBtn');
-    btn.disabled = true;
-    btn.querySelector('.ms-btn-inner').textContent = 'Opening Microsoft login…';
+    const btn     = document.getElementById('msLoginBtn');
+    const btnText = document.getElementById('msLoginBtnText');
+    btn.disabled        = true;
+    btnText.textContent = 'Opening Microsoft login…';
 
     try {
-      // Opens Microsoft's login popup window
       const result = await msalInstance.loginPopup(loginRequest);
       handleMsalResponse(result);
     } catch (err) {
-      // 'user_cancelled' is thrown when the user simply closes the popup — not a real error
-      if (err.errorCode !== 'user_cancelled') {
-        showToast('Login failed: ' + (err.message || err.errorCode), '❌', 'error');
-        console.error('MSAL login error:', err);
+      if (err.errorCode === 'user_cancelled' || err.errorCode === 'access_denied') {
+        // User closed the popup — silent, just re-enable button
+      } else {
+        const detail = err.errorMessage || err.message || err.errorCode || String(err);
+        showToast('Login failed: ' + detail, '❌', 'error');
+        console.error('[MSAL loginPopup error]', err);
       }
       resetBtn();
     }
   }
 
-  // ── Handle MSAL response (popup or redirect) ─────────────────────────────────
+  // ── Process a successful MSAL response ───────────────────────────────────────
   function handleMsalResponse(result) {
     if (!result) return;
 
     const account = result.account;
-    const idToken = result.idToken;          // Signed JWT — always verify server-side
-    const email   = account.username || '';  // UPN e.g. student@dlsu.edu.ph
-    const name    = account.name     || 'Student';
+    const idToken = result.idToken;
+    const email   = (account.username || '').toLowerCase();
+    const name    = account.name || 'Student';
 
-    // ── Domain check ──────────────────────────────────────────────────────────
+    // Domain enforcement — block anything that isn't .edu.ph
     if (!email.endsWith('.edu.ph')) {
       msalInstance.logoutPopup({ account }).catch(() => {});
-      showToast(`Access denied. "${email}" is not an .edu.ph account.`, '🚫', 'error');
+      showToast('Access denied — "' + email + '" is not an .edu.ph account.', '🚫', 'error');
       resetBtn();
       return;
     }
 
-    // ── Valid .edu.ph → send to backend ───────────────────────────────────────
+    // Valid student account
     showLoading();
-    showToast(`Welcome, ${name}! Verifying your credentials…`, '✅', 'success');
+    showToast('Welcome, ' + name + '! Verifying credentials…', '✅', 'success');
 
-    // POST the ID token to your backend.
-    // Backend should verify with: https://login.microsoftonline.com/common/discovery/v2.0/keys
+    // Send token to your backend for server-side verification.
+    // Replace '/your-backend-endpoint' with your real API route.
     fetch('/your-backend-endpoint', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: idToken, email, name })
+      body:    JSON.stringify({ token: idToken, email, name }),
     })
     .then(r => r.json())
     .then(data => {
       console.log('Backend response:', data);
       window.location.href = 'landing.html';
     })
-    .catch(err => {
-      // ⚠️ No backend yet — demo redirect. Remove in production!
-      console.warn('No backend — redirecting for demo:', err);
+    .catch(() => {
+      // ⚠️ No backend yet — remove this fallback in production
       window.location.href = 'landing.html';
     });
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   function resetBtn() {
     const btn = document.getElementById('msLoginBtn');
+    const btnText = document.getElementById('msLoginBtnText');
     if (!btn) return;
-    btn.disabled = false;
-    btn.innerHTML = `
-      <div class="ms-btn-inner">
-        <div class="ms-logo">
-          <span class="sq1"></span><span class="sq2"></span>
-          <span class="sq3"></span><span class="sq4"></span>
-        </div>
-        Sign in with Microsoft
-      </div>`;
+    btn.disabled        = false;
+    btnText.textContent = 'Sign in with Microsoft';
   }
 
   function showToast(message, icon, type) {
@@ -439,13 +325,12 @@ body{
     document.getElementById('toast-icon').textContent = icon || '⚠';
     toast.className = 'toast show' + (type ? ' ' + type : '');
     clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 5000);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 6000);
   }
 
   function showLoading() {
     document.getElementById('loadingOverlay').classList.add('show');
   }
 </script>
-
 </body>
 </html>
