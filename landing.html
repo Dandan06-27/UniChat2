@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UniChain — Messenger</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════
+   ROOT / RESET
+══════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --dark:#050e08;--dark2:#07120a;--dark3:#0a1a0f;--dark4:#0d2116;
+  --mid:#112a18;--g1:#174d25;--g2:#1e7032;--g3:#2ecc71;--g4:#52d98a;
+  --g5:#a8f0c4;--accent:#00ff88;
+  --text:#d0eed8;--text2:#6fa882;--text3:#375445;
+  --border:rgba(46,204,113,0.12);--border2:rgba(46,204,113,0.24);
+  --cl-w:290px;--rp-w:260px;
+}
+html,body{height:100%;font-family:'Sora',sans-serif;}
+body{background:var(--dark);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(46,204,113,0.2);border-radius:4px;}
+
+/* ══════════════════════════════════════════════
+   CHANNEL LIST (left panel)
+══════════════════════════════════════════════ */
+.cl{
+  width:var(--cl-w);min-width:var(--cl-w);
+  height:100vh;background:var(--dark3);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;
+}
+.cl-head{
+  padding:16px 14px 12px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.cl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.cl-brand{display:flex;align-items:center;gap:9px;}
+.cl-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--g3),var(--accent));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 12px rgba(0,255,136,0.25);}
+.cl-title{font-size:1.05rem;font-weight:800;color:#fff;}
+.cl-sub{font-size:0.6rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.cl-actions{display:flex;gap:5px;}
+.icon-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.04);border:none;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.icon-btn:hover{background:rgba(46,204,113,0.1);color:var(--accent);}
+.search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:7px 11px;}
+.search input{background:none;border:none;outline:none;color:var(--text);font-family:'Sora',sans-serif;font-size:0.8rem;width:100%;}
+.search input::placeholder{color:var(--text3);}
+.search-ic{color:var(--text3);font-size:12px;flex-shrink:0;}
+.cl-body{flex:1;overflow-y:auto;padding:6px 0;}
+.cat-label{padding:12px 14px 5px;font-size:0.62rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);}
+.ch-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;cursor:pointer;
+  transition:background 0.15s;position:relative;
+}
+.ch-item:hover{background:rgba(46,204,113,0.06);}
+.ch-item.active{background:rgba(46,204,113,0.1);}
+.ch-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.ch-av{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;position:relative;
+}
+.ch-online{position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--dark3);}
+.ch-info{flex:1;min-width:0;}
+.ch-name{font-size:0.84rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ch-prev{font-size:0.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.ch-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.ch-time{font-size:0.62rem;color:var(--text3);}
+.ch-badge{background:var(--accent);color:#000;font-size:9px;font-weight:700;border-radius:99px;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+
+/* ══════════════════════════════════════════════
+   MAIN CHAT AREA
+══════════════════════════════════════════════ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--dark2);height:100vh;}
+
+/* Chat header */
+.chat-head{
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:13px;
+  background:rgba(7,18,10,0.9);backdrop-filter:blur(10px);
+  flex-shrink:0;z-index:10;
+}
+.chat-head-av{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.chat-head-info{flex:1;}
+.chat-head-name{font-size:0.95rem;font-weight:700;color:#fff;}
+.chat-head-status{font-size:0.7rem;color:var(--g4);display:flex;align-items:center;gap:5px;margin-top:1px;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.chain-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.18);font-size:0.67rem;color:var(--g4);font-weight:600;white-space:nowrap;}
+.hbtn{width:32px;height:32px;border-radius:9px;background:rgba(46,204,113,0.07);border:none;color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.hbtn:hover{background:rgba(46,204,113,0.14);color:var(--accent);}
+
+/* Welcome screen */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;text-align:center;}
+.welcome-ic{font-size:54px;animation:fg 3s ease-in-out infinite;}
+@keyframes fg{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.welcome h2{font-size:1.5rem;font-weight:800;color:#fff;}
+.welcome p{font-size:0.88rem;color:var(--text2);max-width:320px;line-height:1.7;}
+.w-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+.w-chip{padding:6px 14px;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.18);border-radius:99px;font-size:0.73rem;color:var(--g4);}
+
+/* Messages */
+.msgs{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:14px;}
+.date-sep{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.date-line{flex:1;height:1px;background:var(--border);}
+.date-txt{font-size:0.68rem;color:var(--text3);white-space:nowrap;font-weight:500;}
+.msg-row{display:flex;gap:9px;max-width:640px;}
+.msg-row.out{flex-direction:row-reverse;margin-left:auto;}
+.msg-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;align-self:flex-end;}
+.msg-body{display:flex;flex-direction:column;gap:3px;}
+.msg-row.out .msg-body{align-items:flex-end;}
+.msg-sname{font-size:0.68rem;color:var(--g4);font-weight:600;margin-left:2px;}
+.bubble{padding:9px 13px;border-radius:16px;font-size:0.87rem;line-height:1.55;max-width:460px;word-break:break-word;}
+.msg-row:not(.out) .bubble{background:rgba(255,255,255,0.06);color:var(--text);border-bottom-left-radius:3px;}
+.msg-row.out .bubble{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-bottom-right-radius:3px;}
+.msg-meta{display:flex;align-items:center;gap:5px;font-size:0.61rem;color:var(--text3);}
+.mc-hash{font-family:'JetBrains Mono',monospace;color:rgba(82,217,138,0.35);font-size:0.6rem;}
+.read-tick{color:var(--accent);font-size:11px;}
+.typing-ind{display:flex;align-items:center;gap:8px;padding:3px 0;}
+.t-dots{display:flex;gap:3px;}
+.t-dots span{width:6px;height:6px;border-radius:50%;background:var(--g3);opacity:0.5;animation:tp 1.4s ease-in-out infinite;}
+.t-dots span:nth-child(2){animation-delay:0.2s;}
+.t-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes tp{0%,60%,100%{transform:scale(1);opacity:0.3;}30%{transform:scale(1.3);opacity:1;}}
+
+/* TX bar */
+.txbar{padding:4px 18px;background:rgba(0,255,136,0.03);border-top:1px solid rgba(0,255,136,0.06);display:flex;align-items:center;gap:8px;font-size:0.63rem;color:var(--text3);flex-shrink:0;}
+.tx-hash{font-family:'JetBrains Mono',monospace;color:rgba(82,217,138,0.4);}
+
+/* Message input */
+.input-area{padding:12px 18px;border-top:1px solid var(--border);background:rgba(7,18,10,0.95);flex-shrink:0;}
+.input-wrap{display:flex;align-items:flex-end;gap:9px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:14px;padding:9px 12px;transition:border-color 0.2s;}
+.input-wrap:focus-within{border-color:var(--g3);}
+.inp-actions{display:flex;gap:3px;align-self:flex-end;}
+.ia{width:28px;height:28px;border-radius:7px;background:none;border:none;color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color 0.2s;}
+.ia:hover{color:var(--accent);}
+textarea.msgtxt{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Sora',sans-serif;font-size:0.87rem;resize:none;max-height:110px;line-height:1.5;}
+textarea.msgtxt::placeholder{color:var(--text3);}
+.send-btn{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--g2),var(--accent));border:none;color:#000;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;align-self:flex-end;}
+.send-btn:hover{transform:scale(1.08);box-shadow:0 3px 14px rgba(0,255,136,0.35);}
+
+/* ══════════════════════════════════════════════
+   RIGHT PANEL (channel info)
+══════════════════════════════════════════════ */
+.rp{
+  width:var(--rp-w);min-width:var(--rp-w);
+  height:100vh;background:var(--dark3);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+}
+.rp-head{padding:18px 16px 12px;border-bottom:1px solid var(--border);}
+.rp-head h3{font-size:0.88rem;font-weight:700;color:#fff;}
+.rp-sec{padding:13px 16px;border-bottom:1px solid var(--border);}
+.rp-sec h4{font-size:0.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:9px;}
+.chain-box{background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.1);border-radius:10px;padding:11px;}
+.cb-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:0.72rem;}
+.cb-row:last-child{border-bottom:none;}
+.cb-label{color:var(--text3);}
+.cb-val{color:var(--g4);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:0.67rem;}
+.mb-item{display:flex;align-items:center;gap:9px;padding:5px 0;}
+.mb-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.mb-name{font-size:0.78rem;color:var(--text);font-weight:500;}
+.mb-role{font-size:0.63rem;color:var(--text3);}
+.pinned{background:rgba(0,255,136,0.04);border:1px solid var(--border);border-radius:9px;padding:10px 11px;}
+.pinned-who{font-size:0.67rem;color:var(--g4);font-weight:600;margin-bottom:3px;}
+.pinned-msg{font-size:0.77rem;color:var(--text);line-height:1.5;}
+
+/* ══════════════════════════════════════════════
+   MENU PANEL (slide-out from left)
+══════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.overlay.show{opacity:1;pointer-events:all;}
+.menu-panel{
+  position:fixed;top:0;left:0;width:256px;height:100vh;
+  background:#081610;border-right:1px solid var(--border2);
+  z-index:201;transform:translateX(-100%);
+  transition:transform 0.32s cubic-bezier(.22,1,.36,1);
+  display:flex;flex-direction:column;
+  box-shadow:16px 0 50px rgba(0,0,0,0.4);
+}
+.menu-panel.show{transform:translateX(0);}
+.mp-head{padding:22px 18px 16px;border-bottom:1px solid var(--border);}
+.mp-user{display:flex;align-items:center;gap:11px;}
+.mp-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;border:2px solid var(--g3);flex-shrink:0;}
+.mp-name{font-size:0.92rem;font-weight:700;color:#fff;}
+.mp-email{font-size:0.68rem;color:var(--text3);margin-top:2px;}
+.mp-items{flex:1;padding:9px 10px;overflow-y:auto;}
+.mi{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;cursor:pointer;transition:background 0.15s;color:var(--text);font-size:0.85rem;font-weight:500;}
+.mi:hover{background:rgba(46,204,113,0.07);color:#fff;}
+.mi-icon{width:32px;height:32px;border-radius:9px;background:rgba(46,204,113,0.07);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.mi.danger:hover{background:rgba(255,80,80,0.07);color:#ff6b6b;}
+.mi.danger .mi-icon{background:rgba(255,80,80,0.07);}
+.mdiv{height:1px;background:var(--border);margin:6px 0;}
+.mp-ver{padding:14px 18px;font-size:0.64rem;color:var(--text3);border-top:1px solid var(--border);}
+
+/* ══════════════════════════════════════════════
+   FLOATING BUTTONS (top-right, bottom-left)
+══════════════════════════════════════════════ */
+/* Top-right shortcut */
+.btn-tr{
+  position:fixed;top:14px;right:16px;z-index:150;
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,#1a3d28,var(--g2));
+  border:1.5px solid rgba(0,255,136,0.28);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;cursor:pointer;
+  box-shadow:0 3px 16px rgba(0,0,0,0.4);
+  transition:all 0.22s;
+  animation:ps 3s ease-in-out infinite;
+}
+.btn-tr:hover{transform:scale(1.1);box-shadow:0 5px 22px rgba(0,255,136,0.28);}
+@keyframes ps{0%,100%{box-shadow:0 3px 16px rgba(0,0,0,0.4);}50%{box-shadow:0 3px 20px rgba(0,255,136,0.22);}}
+
+/* Bottom-left AI */
+.btn-bl{
+  position:fixed;bottom:22px;left:16px;z-index:150;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.btn-bl-ic{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,#0d3020,var(--g2));
+  border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:21px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(0,255,136,0.25);
+  transition:all 0.22s;position:relative;overflow:hidden;
+}
+.btn-bl-ic::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,136,0.1),transparent);opacity:0;transition:opacity 0.25s;}
+.btn-bl-ic:hover{transform:scale(1.08) translateY(-3px);box-shadow:0 7px 26px rgba(0,255,136,0.38);}
+.btn-bl-ic:hover::before{opacity:1;}
+.btn-bl-lbl{font-size:0.6rem;color:var(--g4);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+
+/* ══════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.modal-bg.show{opacity:1;pointer-events:all;}
+.modal{background:#0a1a10;border:1px solid var(--border2);border-radius:18px;padding:26px;width:90%;max-width:460px;box-shadow:0 36px 90px rgba(0,0,0,0.5);transform:scale(0.94) translateY(18px);transition:transform 0.32s cubic-bezier(.22,1,.36,1);}
+.modal-bg.show .modal{transform:none;}
+.modal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:1rem;font-weight:800;color:#fff;}
+.modal-close{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,0.05);border:none;color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:rgba(255,80,80,0.1);color:#ff6b6b;}
+
+/* Shortcuts grid */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.sc-item{padding:13px 9px;border-radius:11px;background:rgba(46,204,113,0.05);border:1px solid var(--border);cursor:pointer;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;}
+.sc-item:hover{background:rgba(46,204,113,0.1);border-color:var(--g3);transform:translateY(-2px);}
+.sc-ic{font-size:20px;}
+.sc-nm{font-size:0.68rem;color:var(--text);font-weight:600;text-align:center;line-height:1.3;}
+
+/* AI chat */
+.ai-area{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:11px;padding:13px;min-height:150px;max-height:200px;overflow-y:auto;margin-bottom:12px;font-size:0.83rem;line-height:1.6;}
+.ai-msg{margin-bottom:9px;}
+.ai-lbl{font-size:0.63rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.ai-lbl.u{color:var(--g4);}
+.ai-lbl.b{color:var(--accent);}
+.ai-txt{color:var(--text);}
+.ai-inp-row{display:flex;gap:8px;}
+.ai-inp{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--text);font-family:'Sora',sans-serif;font-size:0.83rem;outline:none;}
+.ai-inp:focus{border-color:var(--g3);}
+.ai-send{padding:9px 15px;border-radius:9px;background:linear-gradient(135deg,var(--g2),var(--accent));border:none;color:#000;font-weight:700;font-size:0.83rem;cursor:pointer;transition:all 0.2s;}
+.ai-send:hover{transform:scale(1.04);}
+
+/* Settings */
+.set-sec{margin-bottom:16px;}
+.set-sec h4{font-size:0.66rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.set-row:last-child{border-bottom:none;}
+.set-lbl{font-size:0.82rem;color:var(--text);}
+.set-lbl small{display:block;font-size:0.68rem;color:var(--text3);}
+.tog{width:38px;height:21px;border-radius:99px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;position:relative;transition:background 0.3s;flex-shrink:0;}
+.tog.on{background:var(--g3);}
+.tog::after{content:'';position:absolute;left:3px;top:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left 0.3s;}
+.tog.on::after{left:19px;}
+.save-btn{width:100%;padding:11px;border-radius:9px;background:linear-gradient(135deg,var(--g2),var(--accent));border:none;color:#000;font-weight:700;font-size:0.87rem;cursor:pointer;margin-top:4px;}
+
+/* Toast */
+.toast{position:fixed;top:15px;left:50%;transform:translateX(-50%) translateY(-18px);background:#0a1e12;border:1px solid var(--border2);color:#fff;padding:11px 20px;border-radius:11px;font-size:0.8rem;font-weight:500;box-shadow:0 14px 40px rgba(0,0,0,0.4);z-index:9999;opacity:0;transition:all 0.28s;display:flex;align-items:center;gap:9px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:860px){.rp{display:none;}}
+@media(max-width:580px){.cl{width:220px;min-width:220px;}}
+</style>
+</head>
+<body>
+
+<!-- ══ CHANNEL LIST ═══════════════════════════════════════════════ -->
+<div class="cl" id="clPanel">
+  <div class="cl-head">
+    <div class="cl-top">
+      <div class="cl-brand">
+        <div class="cl-logo">⛓</div>
+        <div><div class="cl-title">UniChain</div><div class="cl-sub">Messenger</div></div>
+      </div>
+      <div class="cl-actions">
+        <button class="icon-btn" title="Compose" onclick="toast('New chat coming soon!','✏')">✏</button>
+        <button class="icon-btn" title="Menu" onclick="openMenu()">☰</button>
+      </div>
+    </div>
+    <div class="search">
+      <span class="search-ic">🔍</span>
+      <input type="text" placeholder="Search channels…" oninput="filterChannels(this.value)"/>
+    </div>
+  </div>
+  <div class="cl-body" id="clBody">
+
+    <div class="cat-label">🏛 Departments</div>
+
+    <div class="ch-item" data-name="College of Business Administration" onclick="openChannel(this,'College of Business Administration','🏦','186 members · 24 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#143d20,#1e7032);">🏦</div>
+      <div class="ch-info">
+        <div class="ch-name">Business Administration</div>
+        <div class="ch-prev">📢 Finals schedule now posted</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">10:24</div><div class="ch-badge">5</div></div>
+    </div>
+
+    <div class="ch-item" data-name="College of Education" onclick="openChannel(this,'College of Education','📚','142 members · 15 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#123518,#196b2c);">📚</div>
+      <div class="ch-info">
+        <div class="ch-name">College of Education</div>
+        <div class="ch-prev">Maria: Study group at 3PM?</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">9:51</div></div>
+    </div>
+
+    <div class="ch-item" data-name="College of Engineering Technology and Architecture" onclick="openChannel(this,'College of Engineering Technology and Architecture','⚙','203 members · 28 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#15401e,#1d7830);">⚙</div>
+      <div class="ch-info">
+        <div class="ch-name">Engr. Tech &amp; Architecture</div>
+        <div class="ch-prev">Project deadline extended!</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">9:12</div><div class="ch-badge">2</div></div>
+    </div>
+
+    <div class="ch-item" data-name="College of Criminal Justice" onclick="openChannel(this,'College of Criminal Justice','⚖','97 members · 11 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#0f2e18,#165e26);">⚖</div>
+      <div class="ch-info">
+        <div class="ch-name">Criminal Justice</div>
+        <div class="ch-prev">Moot court practice — Thu</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">8:30</div></div>
+    </div>
+
+    <div class="ch-item" data-name="Basic Education" onclick="openChannel(this,'Basic Education','🎒','168 members · 22 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#143b1a,#1b6a2a);">🎒</div>
+      <div class="ch-info">
+        <div class="ch-name">Basic Education</div>
+        <div class="ch-prev">PE uniform reminder tomorrow</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">Tue</div></div>
+    </div>
+
+    <div class="cat-label">💬 Community</div>
+
+    <div class="ch-item active" data-name="General Chat" onclick="openChannel(this,'General Chat','💬','248 members · 32 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#0f4a1d,#197832);">💬<div class="ch-online"></div></div>
+      <div class="ch-info">
+        <div class="ch-name">General Chat</div>
+        <div class="ch-prev">Anyone joining the fair?</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">Now</div><div class="ch-badge">12</div></div>
+    </div>
+
+    <div class="ch-item" data-name="Marketplace" onclick="openChannel(this,'Marketplace','🛒','312 members · 18 online')">
+      <div class="ch-av" style="background:linear-gradient(135deg,#133d1b,#1b6c2c);">🛒<div class="ch-online"></div></div>
+      <div class="ch-info">
+        <div class="ch-name">Marketplace</div>
+        <div class="ch-prev">📦 TI-84 Calculator ₱800</div>
+      </div>
+      <div class="ch-meta"><div class="ch-time">11:00</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MAIN AREA ══════════════════════════════════════════════════ -->
+<div class="main" id="mainArea">
+
+  <!-- Welcome screen -->
+  <div class="welcome" id="welcomeScreen">
+    <div class="welcome-ic">⛓</div>
+    <h2>Welcome to UniChain</h2>
+    <p>Select a channel from the left to start messaging. All messages are blockchain-verified for authenticity.</p>
+    <div class="w-chips">
+      <div class="w-chip">🔒 End-to-End Encrypted</div>
+      <div class="w-chip">⛓ On-Chain Verified</div>
+      <div class="w-chip">🎓 Students Only</div>
+    </div>
+  </div>
+
+  <!-- Chat view -->
+  <div id="chatView" style="display:none;flex:1;flex-direction:column;overflow:hidden;height:100vh;">
+    <div class="chat-head">
+      <div class="chat-head-av" id="chAvatar">💬</div>
+      <div class="chat-head-info">
+        <div class="chat-head-name" id="chName">General Chat</div>
+        <div class="chat-head-status"><div class="sdot"></div><span id="chStatus">248 members · 32 online</span></div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div class="chain-badge">⛓ On-chain</div>
+        <button class="hbtn" onclick="toast('Search in chat — coming soon!','🔍')">🔍</button>
+        <button class="hbtn" onclick="toast('Member list — coming soon!','👥')">👥</button>
+        <button class="hbtn" onclick="toast('Channel info — coming soon!','ℹ')">ℹ</button>
+      </div>
+    </div>
+
+    <div class="msgs" id="msgArea">
+      <div class="date-sep"><div class="date-line"></div><div class="date-txt">Today, March 9 2025</div><div class="date-line"></div></div>
+
+      <div class="msg-row">
+        <div class="msg-av">MR</div>
+        <div class="msg-body">
+          <div class="msg-sname">Maria Reyes · CBA</div>
+          <div class="bubble">Good morning everyone! Has anyone seen the updated finals schedule? 📅</div>
+          <div class="msg-meta"><span>8:22 AM</span><span>⛓</span><span class="mc-hash">0x3a9f</span></div>
+        </div>
+      </div>
+
+      <div class="msg-row">
+        <div class="msg-av">CL</div>
+        <div class="msg-body">
+          <div class="msg-sname">Carlo Lim · CETA</div>
+          <div class="bubble">Yeah it's on the student portal — finals week starts the 15th!</div>
+          <div class="msg-meta"><span>8:25 AM</span><span>⛓</span></div>
+        </div>
+      </div>
+
+      <div class="msg-row">
+        <div class="msg-av">AT</div>
+        <div class="msg-body">
+          <div class="msg-sname">Ana Torres · COE</div>
+          <div class="bubble">Can someone share the link? I can't find it 😅</div>
+          <div class="msg-meta"><span>8:27 AM</span><span>⛓</span></div>
+        </div>
+      </div>
+
+      <div class="msg-row out">
+        <div class="msg-av">JS</div>
+        <div class="msg-body">
+          <div class="bubble">Here: portal.usc.edu.ph/schedule — I also made a summary for CBA students 📄</div>
+          <div class="msg-meta"><span>8:29 AM</span><span>⛓</span><span class="read-tick">✓✓</span></div>
+        </div>
+      </div>
+
+      <div class="msg-row">
+        <div class="msg-av">MR</div>
+        <div class="msg-body">
+          <div class="msg-sname">Maria Reyes · CBA</div>
+          <div class="bubble">Thank you so much! 🙏</div>
+          <div class="msg-meta"><span>8:31 AM</span><span>⛓</span></div>
+        </div>
+      </div>
+
+      <div class="date-sep"><div class="date-line"></div><div class="date-txt">Just now</div><div class="date-line"></div></div>
+
+      <div class="msg-row">
+        <div class="msg-av">RG</div>
+        <div class="msg-body">
+          <div class="msg-sname">Rico Garcia · CCJ</div>
+          <div class="bubble">Anyone joining the university fair on Friday? The booth is near the canteen 🎪</div>
+          <div class="msg-meta"><span>Just now</span><span>⛓</span></div>
+        </div>
+      </div>
+
+      <div class="typing-ind" id="typingInd" style="display:none;">
+        <div class="msg-av" style="width:26px;height:26px;font-size:10px;">AT</div>
+        <div class="t-dots"><span></span><span></span><span></span></div>
+        <span style="font-size:0.68rem;color:var(--text3);">Ana is typing…</span>
+      </div>
+    </div>
+
+    <div class="txbar">
+      <span>⛓</span><span>Last block:</span>
+      <span class="tx-hash" id="txHash">0x4f7e2a1b9c83d5e6f…</span>
+      <span style="margin-left:auto;">Block #<span id="blockNum">48291</span></span>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrap">
+        <div class="inp-actions">
+          <button class="ia" onclick="toast('File sharing — coming soon!','📎')">📎</button>
+          <button class="ia" onclick="toast('Image sharing — coming soon!','🖼')">🖼</button>
+          <button class="ia" onclick="toast('Emoji picker — coming soon!','😊')">😊</button>
+        </div>
+        <textarea class="msgtxt" id="msgInput" rows="1" placeholder="Send a message… (⛓ blockchain-secured)" onkeydown="handleKey(event)" oninput="autoH(this)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ RIGHT PANEL ════════════════════════════════════════════════ -->
+<div class="rp" id="rpPanel">
+  <div class="rp-head"><h3>Channel Info</h3></div>
+  <div class="rp-sec">
+    <h4>Blockchain Status</h4>
+    <div class="chain-box">
+      <div class="cb-row"><span class="cb-label">Network</span><span class="cb-val">UniChain</span></div>
+      <div class="cb-row"><span class="cb-label">Block</span><span class="cb-val" id="rpBlock">48,291</span></div>
+      <div class="cb-row"><span class="cb-label">Messages</span><span class="cb-val">1,284</span></div>
+      <div class="cb-row"><span class="cb-label">Status</span><span class="cb-val" style="color:var(--accent);">● Active</span></div>
+    </div>
+  </div>
+  <div class="rp-sec">
+    <h4>Online Members</h4>
+    <div class="mb-item"><div class="mb-av">MR</div><div><div class="mb-name">Maria Reyes</div><div class="mb-role">CBA · 3rd Year</div></div></div>
+    <div class="mb-item"><div class="mb-av">CL</div><div><div class="mb-name">Carlo Lim</div><div class="mb-role">CETA · 2nd Year</div></div></div>
+    <div class="mb-item"><div class="mb-av">AT</div><div><div class="mb-name">Ana Torres</div><div class="mb-role">COE · 4th Year</div></div></div>
+    <div class="mb-item"><div class="mb-av">RG</div><div><div class="mb-name">Rico Garcia</div><div class="mb-role">CCJ · 1st Year</div></div></div>
+    <div style="font-size:0.7rem;color:var(--text3);margin-top:7px;padding-top:7px;border-top:1px solid var(--border);">+28 more online</div>
+  </div>
+  <div class="rp-sec">
+    <h4>Pinned Message</h4>
+    <div class="pinned">
+      <div class="pinned-who">📌 Admin</div>
+      <div class="pinned-msg">Finals schedule is now on the student portal. Good luck everyone! 🎓</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MENU PANEL ═════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+<div class="menu-panel" id="menuPanel">
+  <div class="mp-head">
+    <div class="mp-user">
+      <div class="mp-av" id="mpAv">JS</div>
+      <div>
+        <div class="mp-name" id="mpName">Juan Santos</div>
+        <div class="mp-email" id="mpEmail">j.santos@usc.edu.ph</div>
+      </div>
+    </div>
+  </div>
+  <div class="mp-items">
+    <div class="mi" onclick="closeMenuThenModal('profileModal')"><div class="mi-icon">👤</div>User Profile</div>
+    <div class="mi" onclick="closeMenuThenModal('settingsModal')"><div class="mi-icon">⚙</div>Settings</div>
+    <div class="mi" onclick="toast('Archive — coming soon!','📦')"><div class="mi-icon">📦</div>Archive</div>
+    <div class="mdiv"></div>
+    <div class="mi" onclick="closeMenuThenModal('helpModal')"><div class="mi-icon">❓</div>Help Center</div>
+    <div class="mi" onclick="toast('Blockchain ledger — coming soon!','⛓')"><div class="mi-icon">⛓</div>Blockchain Ledger</div>
+    <div class="mdiv"></div>
+    <div class="mi danger" onclick="doLogout()"><div class="mi-icon">🚪</div>Log Out</div>
+  </div>
+  <div class="mp-ver">UniChain v1.0.0 · Blockchain Messenger<br>© 2025 All rights reserved</div>
+</div>
+
+<!-- ══ FLOATING BUTTONS ═══════════════════════════════════════════ -->
+<!-- Top-right: shortcuts -->
+<div class="btn-tr" id="btnTR" title="Quick Access" onclick="openModal('shortcutModal')">🚀</div>
+<!-- Bottom-left: AI -->
+<div class="btn-bl">
+  <div class="btn-bl-ic" title="AI Assistant" onclick="openModal('aiModal')">🤖</div>
+  <div class="btn-bl-lbl">AI Assist</div>
+</div>
+
+<!-- ══ TOAST ══════════════════════════════════════════════════════ -->
+<div class="toast" id="toastEl"><span id="toastIc">ℹ</span><span id="toastMsg">Info</span></div>
+
+<!-- ══ MODALS ═════════════════════════════════════════════════════ -->
+
+<!-- Shortcut Modal -->
+<div class="modal-bg" id="shortcutModal">
+  <div class="modal">
+    <div class="modal-top"><div class="modal-title">🚀 Quick Access</div><button class="modal-close" onclick="closeModal('shortcutModal')">✕</button></div>
+    <p style="font-size:0.79rem;color:var(--text2);margin-bottom:14px;">Jump to student resources:</p>
+    <div class="sc-grid">
+      <a class="sc-item" href="#" onclick="toast('Opening Student Portal…','🎓');closeModal('shortcutModal')"><div class="sc-ic">🎓</div><div class="sc-nm">Student Portal</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Library…','📚');closeModal('shortcutModal')"><div class="sc-ic">📚</div><div class="sc-nm">Library</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Enrollment…','📝');closeModal('shortcutModal')"><div class="sc-ic">📝</div><div class="sc-nm">Enrollment</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Grades…','📊');closeModal('shortcutModal')"><div class="sc-ic">📊</div><div class="sc-nm">Grades</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Canteen Menu…','🍽');closeModal('shortcutModal')"><div class="sc-ic">🍽</div><div class="sc-nm">Canteen</div></a>
+      <a class="sc-item" href="#" onclick="openModal('aiModal');closeModal('shortcutModal')"><div class="sc-ic">🤖</div><div class="sc-nm">AI Assistant</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Events…','📅');closeModal('shortcutModal')"><div class="sc-ic">📅</div><div class="sc-nm">Events</div></a>
+      <a class="sc-item" href="#" onclick="toast('Opening Scholarships…','🏆');closeModal('shortcutModal')"><div class="sc-ic">🏆</div><div class="sc-nm">Scholarships</div></a>
+      <a class="sc-item" href="#" onclick="openChannelByName('Marketplace');closeModal('shortcutModal')"><div class="sc-ic">🛒</div><div class="sc-nm">Marketplace</div></a>
+    </div>
+  </div>
+</div>
+
+<!-- AI Modal -->
+<div class="modal-bg" id="aiModal">
+  <div class="modal">
+    <div class="modal-top"><div class="modal-title">🤖 UniChain AI Assistant</div><button class="modal-close" onclick="closeModal('aiModal')">✕</button></div>
+    <div class="ai-area" id="aiArea">
+      <div class="ai-msg"><div class="ai-lbl b">UniChain AI</div><div class="ai-txt">👋 Hello! I can help with schedules, enrollment, grades, library hours, and more. Ask me anything!</div></div>
+    </div>
+    <div class="ai-inp-row">
+      <input class="ai-inp" id="aiInp" placeholder="Ask about your university…" onkeydown="if(event.key==='Enter')sendAI()"/>
+      <button class="ai-send" onclick="sendAI()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-top"><div class="modal-title">⚙ Settings</div><button class="modal-close" onclick="closeModal('settingsModal')">✕</button></div>
+    <div class="set-sec">
+      <h4>Notifications</h4>
+      <div class="set-row"><div class="set-lbl">Push Notifications<small>Get notified of new messages</small></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="set-row"><div class="set-lbl">Sound Alerts<small>Play sound on new message</small></div><button class="tog" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="set-sec">
+      <h4>Privacy</h4>
+      <div class="set-row"><div class="set-lbl">Read Receipts<small>Let others know you've read</small></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="set-row"><div class="set-lbl">Online Status<small>Show when you're active</small></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="set-sec">
+      <h4>Blockchain</h4>
+      <div class="set-row"><div class="set-lbl">Show TX Hashes<small>Display hashes in chat</small></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="set-row"><div class="set-lbl">Auto-verify Messages<small>Check integrity automatically</small></div><button class="tog on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <button class="save-btn" onclick="toast('Settings saved!','✅');closeModal('settingsModal')">Save Settings</button>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-bg" id="profileModal">
+  <div class="modal">
+    <div class="modal-top"><div class="modal-title">👤 User Profile</div><button class="modal-close" onclick="closeModal('profileModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:18px;">
+      <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--g1),var(--g3));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;border:3px solid var(--g3);" id="profAv">JS</div>
+      <div style="text-align:center;">
+        <div style="font-size:1.05rem;font-weight:700;color:#fff;" id="profName">Juan Santos</div>
+        <div style="font-size:0.77rem;color:var(--text3);" id="profEmail">j.santos@usc.edu.ph</div>
+        <div style="margin-top:7px;padding:3px 13px;border-radius:99px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.18);font-size:0.7rem;color:var(--g4);display:inline-block;">✓ Verified Student</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;">
+      <div style="padding:11px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:9px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--accent);">284</div><div style="font-size:0.65rem;color:var(--text3);">Messages Sent</div></div>
+      <div style="padding:11px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:9px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:var(--accent);">7</div><div style="font-size:0.65rem;color:var(--text3);">Channels Joined</div></div>
+    </div>
+    <div style="font-size:0.74rem;color:var(--text2);line-height:1.7;background:rgba(0,255,136,0.04);border:1px solid var(--border);border-radius:9px;padding:11px;">
+      <strong style="color:var(--g4);">Department:</strong> College of Business Administration<br>
+      <strong style="color:var(--g4);">Year Level:</strong> 3rd Year<br>
+      <strong style="color:var(--g4);">Student ID:</strong> 2022-03-1457<br>
+      <strong style="color:var(--g4);">Wallet:</strong> <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;">0x9bA3…f214</span>
+    </div>
+    <button onclick="closeModal('profileModal')" style="width:100%;padding:10px;border-radius:9px;background:rgba(46,204,113,0.08);border:1px solid var(--border);color:var(--text);font-weight:600;font-size:0.87rem;cursor:pointer;margin-top:12px;">Close</button>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-bg" id="helpModal">
+  <div class="modal">
+    <div class="modal-top"><div class="modal-title">❓ Help Center</div><button class="modal-close" onclick="closeModal('helpModal')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="padding:13px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:11px;cursor:pointer;" onclick="toast('Loading FAQ…','📋')"><div style="font-weight:600;font-size:0.85rem;margin-bottom:3px;">📋 Frequently Asked Questions</div><div style="font-size:0.72rem;color:var(--text3);">Common questions about UniChain</div></div>
+      <div style="padding:13px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:11px;cursor:pointer;" onclick="toast('Opening blockchain guide…','⛓')"><div style="font-weight:600;font-size:0.85rem;margin-bottom:3px;">⛓ How Blockchain Works Here</div><div style="font-size:0.72rem;color:var(--text3);">Understand message verification</div></div>
+      <div style="padding:13px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:11px;cursor:pointer;" onclick="toast('Opening privacy guide…','🔒')"><div style="font-weight:600;font-size:0.85rem;margin-bottom:3px;">🔒 Privacy &amp; Security Guide</div><div style="font-size:0.72rem;color:var(--text3);">How your data is protected</div></div>
+      <div style="padding:13px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:11px;cursor:pointer;" onclick="toast('Opening contact form…','📧')"><div style="font-weight:600;font-size:0.85rem;margin-bottom:3px;">📧 Contact Support</div><div style="font-size:0.72rem;color:var(--text3);">support@unichain.edu.ph</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCRIPTS ════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── Supabase ──────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key-here';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── State ─────────────────────────────────────────────────────────
+let curChannel = 'General Chat';
+let curUser = { name:'Juan Santos', email:'j.santos@usc.edu.ph', initials:'JS' };
+let blockNum = 48291;
+let msgSub = null;
+
+// Per-channel message stores (in-memory)
+const channelMessages = {
+  'General Chat': [
+    {av:'MR',name:'Maria Reyes · CBA',text:'Good morning everyone! Has anyone seen the updated finals schedule? 📅',time:'8:22 AM',own:false},
+    {av:'CL',name:'Carlo Lim · CETA',text:'Yeah it\'s on the student portal — finals week starts the 15th!',time:'8:25 AM',own:false},
+    {av:'AT',name:'Ana Torres · COE',text:'Can someone share the link? I can\'t find it 😅',time:'8:27 AM',own:false},
+    {av:'JS',name:'',text:'Here: portal.usc.edu.ph/schedule — I also made a summary for CBA students 📄',time:'8:29 AM',own:true},
+    {av:'MR',name:'Maria Reyes · CBA',text:'Thank you so much! 🙏',time:'8:31 AM',own:false},
+    {av:'RG',name:'Rico Garcia · CCJ',text:'Anyone joining the university fair on Friday? The booth is near the canteen 🎪',time:'Just now',own:false},
+  ],
+  'College of Business Administration': [
+    {av:'AD',name:'Admin · CBA',text:'📢 Final examinations schedule has been posted on the bulletin board and student portal. Please check your assigned rooms.',time:'10:00 AM',own:false},
+    {av:'JP',name:'Juan Pascual · CBA',text:'Thank you Admin! When is the last day to file for incomplete grades?',time:'10:05 AM',own:false},
+    {av:'AD',name:'Admin · CBA',text:'Filing for incomplete grades deadline is April 5. See the Registrar\'s Office.',time:'10:08 AM',own:false},
+    {av:'JS',name:'',text:'Just saw the schedule — our Accounting finals is on March 17 at 8AM. Room 201. 👍',time:'10:24 AM',own:true},
+  ],
+  'College of Education': [
+    {av:'MR',name:'Maria Reyes · COE',text:'Study group for Educational Technology this afternoon, 3PM at the library 📚',time:'9:30 AM',own:false},
+    {av:'LG',name:'Lisa Go · COE',text:'I\'ll be there! Shall we bring our lesson plan drafts?',time:'9:35 AM',own:false},
+    {av:'MR',name:'Maria Reyes · COE',text:'Yes please bring them! We need to peer-review before submission.',time:'9:38 AM',own:false},
+    {av:'JS',name:'',text:'I\'ll join too! See you guys at 3 😊',time:'9:51 AM',own:true},
+  ],
+  'College of Engineering Technology and Architecture': [
+    {av:'BN',name:'Ben Navarro · CETA',text:'Heads up — the Project Design submission deadline has been extended to March 20!',time:'9:00 AM',own:false},
+    {av:'CM',name:'Carla Mendez · CETA',text:'Oh thank God 😅 I still need to finalize my CAD drawings',time:'9:03 AM',own:false},
+    {av:'BN',name:'Ben Navarro · CETA',text:'Prof. Delos Santos sent an email. Check your school email for details.',time:'9:05 AM',own:false},
+    {av:'JS',name:'',text:'Got the email! Thanks for the heads up Ben 🙏',time:'9:12 AM',own:true},
+  ],
+  'College of Criminal Justice': [
+    {av:'RM',name:'Rhea Mateo · CCJ',text:'Moot court practice this Thursday 2PM at the mock courtroom. Attendance is mandatory.',time:'8:00 AM',own:false},
+    {av:'DC',name:'Dan Cruz · CCJ',text:'Copy that! Are we doing the full simulation or just arguments?',time:'8:10 AM',own:false},
+    {av:'RM',name:'Rhea Mateo · CCJ',text:'Full simulation — prosecution AND defense sides. Prepare your case briefs.',time:'8:15 AM',own:false},
+    {av:'JS',name:'',text:'Ready! See everyone Thursday 💪',time:'8:30 AM',own:true},
+  ],
+  'Basic Education': [
+    {av:'TC',name:'Teacher Cruz',text:'🎒 Reminder: All students must wear their PE uniform tomorrow. No uniform = no participation.',time:'Mon 3:00 PM',own:false},
+    {av:'PA',name:'Parent Rep · Alice',text:'Thank you for the reminder Teacher Cruz! Will share to our group chat.',time:'Mon 3:15 PM',own:false},
+    {av:'TC',name:'Teacher Cruz',text:'Also, Friday is the Science Fair. Please bring your project materials by 7AM.',time:'Mon 3:20 PM',own:false},
+    {av:'JS',name:'',text:'Understood! My project is ready 🧪',time:'Tue',own:true},
+  ],
+  'Marketplace': [
+    {av:'KS',name:'Karen Santos',text:'📦 Selling: TI-84 Plus Calculator — ₱800. Brand new, still in box! DM me.',time:'11:00 AM',own:false},
+    {av:'TR',name:'Tom Reyes',text:'📗 Selling: Business Law textbook (2022 edition) — ₱350. Minor highlights only.',time:'10:45 AM',own:false},
+    {av:'MG',name:'Mae Go',text:'🛍 Looking for: Uniform for COE 2nd year. Size M. Anyone selling?',time:'10:30 AM',own:false},
+    {av:'JS',name:'',text:'@Mae — I have one! DM me, Size M in good condition. ₱200 🙂',time:'11:10 AM',own:true},
+  ],
+};
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadSession();
+  startBlockSim();
+  startTypingSim();
+  // Open General Chat by default
+  const defaultItem = document.querySelector('.ch-item.active');
+  if (defaultItem) openChannel(defaultItem, 'General Chat', '💬', '248 members · 32 online');
+});
+
+async function loadSession() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const email = session.user.email;
+      if (!email.endsWith('.edu.ph')) { await sb.auth.signOut(); window.location.href='index.html'; return; }
+      const name = session.user.user_metadata?.full_name || email.split('@')[0].replace(/\./g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+      const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      curUser = { name, email, initials };
+      updateUserUI();
+    }
+  } catch(e) { /* demo mode */ }
+}
+
+function updateUserUI() {
+  ['mpAv','profAv'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=curUser.initials; });
+  ['mpName','profName'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=curUser.name; });
+  ['mpEmail','profEmail'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=curUser.email; });
+}
+
+// ── Channel Open ──────────────────────────────────────────────────
+function openChannel(el, name, emoji, status) {
+  curChannel = name;
+
+  // Update active state in list
+  document.querySelectorAll('.ch-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  // Remove unread badge
+  const badge = el.querySelector('.ch-badge');
+  if (badge) badge.remove();
+
+  // Show chat view
+  document.getElementById('welcomeScreen').style.display = 'none';
+  const cv = document.getElementById('chatView');
+  cv.style.display = 'flex';
+
+  // Update header
+  document.getElementById('chAvatar').textContent = emoji;
+  document.getElementById('chName').textContent = name;
+  document.getElementById('chStatus').textContent = status;
+  document.getElementById('msgInput').placeholder = `Message ${name}… (⛓ blockchain-secured)`;
+
+  // Update right panel pinned context
+  updateRightPanel(name);
+
+  // Render messages for this channel
+  renderMessages(name);
+
+  // Subscribe to realtime
+  subscribeChannel(name);
+
+  // Close menu if open
+  closeMenu();
+
+  setTimeout(scrollBottom, 80);
+}
+
+function openChannelByName(name) {
+  const items = document.querySelectorAll('.ch-item');
+  items.forEach(item => {
+    if (item.dataset.name === name) item.click();
+  });
+}
+
+// ── Render messages for a channel ─────────────────────────────────
+function renderMessages(channelName) {
+  const area = document.getElementById('msgArea');
+  const msgs = channelMessages[channelName] || [];
+
+  area.innerHTML = `<div class="date-sep"><div class="date-line"></div><div class="date-txt">Today, March 9 2025</div><div class="date-line"></div></div>`;
+
+  msgs.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'msg-row' + (m.own ? ' out' : '');
+    const hash = '0x' + Math.random().toString(16).substr(2,4);
+    row.innerHTML = `
+      <div class="msg-av">${m.av}</div>
+      <div class="msg-body">
+        ${!m.own ? `<div class="msg-sname">${m.name}</div>` : ''}
+        <div class="bubble">${escHtml(m.text)}</div>
+        <div class="msg-meta">
+          <span>${m.time}</span><span>⛓</span>
+          <span class="mc-hash">${hash}</span>
+          ${m.own ? '<span class="read-tick">✓✓</span>' : ''}
+        </div>
+      </div>`;
+    area.appendChild(row);
+  });
+
+  // Add typing indicator
+  const ti = document.createElement('div');
+  ti.className='typing-ind';ti.id='typingInd';ti.style.display='none';
+  ti.innerHTML=`<div class="msg-av" style="width:26px;height:26px;font-size:10px;">??</div><div class="t-dots"><span></span><span></span><span></span></div><span style="font-size:0.68rem;color:var(--text3);">Someone is typing…</span>`;
+  area.appendChild(ti);
+}
+
+function updateRightPanel(name) {
+  const pinMsgs = {
+    'General Chat': 'Finals schedule is now on the student portal. Good luck everyone! 🎓',
+    'College of Business Administration': 'Finals examinations are on March 15–21. Room assignments posted on the portal.',
+    'College of Education': 'Lesson plan submissions due March 18. Submit via the online portal.',
+    'College of Engineering Technology and Architecture': 'Project Design submissions extended to March 20. See email for details.',
+    'College of Criminal Justice': 'Moot Court Finals — March 22. Prepare your case briefs.',
+    'Basic Education': 'Science Fair is on Friday March 14. Bring materials by 7AM.',
+    'Marketplace': 'No selling of stolen or prohibited items. Violations = permanent ban.',
+  };
+  const pm = document.querySelector('.pinned-msg');
+  if (pm) pm.textContent = pinMsgs[name] || 'No pinned messages.';
+}
+
+// ── Supabase realtime ─────────────────────────────────────────────
+async function subscribeChannel(name) {
+  if (msgSub) { try { sb.removeChannel(msgSub); } catch(e){} }
+  try {
+    msgSub = sb.channel('msgs:'+name)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`channel=eq.${name}`},
+        payload => appendMsg(payload.new, false))
+      .subscribe();
+  } catch(e) {}
+}
+
+// ── Send message ──────────────────────────────────────────────────
+async function sendMsg() {
+  const inp = document.getElementById('msgInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value=''; inp.style.height='auto';
+  const hash = '0x'+Math.random().toString(16).substr(2,8);
+  blockNum++;
+  updateBlockUI();
+  appendMsg({ sender_name:curUser.name, sender_initials:curUser.initials, content:txt, created_at:new Date().toISOString(), tx_hash:hash }, true);
+  // Store locally for this session
+  if (!channelMessages[curChannel]) channelMessages[curChannel]=[];
+  channelMessages[curChannel].push({av:curUser.initials,name:'',text:txt,time:'Just now',own:true});
+  try {
+    await sb.from('messages').insert({ channel:curChannel, sender_id:curUser.email, sender_name:curUser.name, content:txt, tx_hash:hash });
+  } catch(e) {}
+}
+
+function appendMsg(msg, own) {
+  const area = document.getElementById('msgArea');
+  if (!area) return;
+  const ti = document.getElementById('typingInd');
+  const time = new Date(msg.created_at||Date.now()).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+  const init = msg.sender_initials || (msg.sender_name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const hash = msg.tx_hash||('0x'+Math.random().toString(16).substr(2,6));
+  const row = document.createElement('div');
+  row.className='msg-row'+(own?' out':'');
+  row.innerHTML=`<div class="msg-av">${init}</div><div class="msg-body">${!own?`<div class="msg-sname">${msg.sender_name||''}</div>`:''}<div class="bubble">${escHtml(msg.content)}</div><div class="msg-meta"><span>${time}</span><span>⛓</span><span class="mc-hash">${hash.slice(0,8)}</span>${own?'<span class="read-tick">✓✓</span>':''}</div></div>`;
+  area.insertBefore(row, ti);
+  scrollBottom();
+}
+
+function escHtml(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+function autoH(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+function scrollBottom(){ const a=document.getElementById('msgArea'); if(a) a.scrollTop=a.scrollHeight; }
+
+// ── Blockchain simulation ─────────────────────────────────────────
+function startBlockSim(){
+  setInterval(()=>{ blockNum++; updateBlockUI(); }, 11000);
+}
+function updateBlockUI(){
+  const h='0x'+Math.random().toString(16).substr(2,16)+'…';
+  const txEl=document.getElementById('txHash'); if(txEl) txEl.textContent=h;
+  const bnEl=document.getElementById('blockNum'); if(bnEl) bnEl.textContent=blockNum.toLocaleString();
+  const rpEl=document.getElementById('rpBlock'); if(rpEl) rpEl.textContent=blockNum.toLocaleString();
+}
+
+// ── Typing simulation ─────────────────────────────────────────────
+function startTypingSim(){
+  setInterval(()=>{
+    const ti=document.getElementById('typingInd'); if(!ti) return;
+    if(Math.random()>0.65){ ti.style.display='flex'; setTimeout(()=>ti.style.display='none',2800); scrollBottom(); }
+  }, 7000);
+}
+
+// ── AI ────────────────────────────────────────────────────────────
+const aiDB = {
+  schedule:'📅 Finals week is March 15–21. Check the full schedule at portal.usc.edu.ph.',
+  enrollment:'📝 Enrollment for next semester opens April 1. Ensure your clearances are signed!',
+  library:'📚 Library hours: Mon–Sat 7AM–9PM. Reserve books online via the student portal.',
+  grade:'📊 Grades are released 2 weeks after the last exam. Check your portal.',
+  canteen:'🍽 Today\'s menu: Adobo ₱45, Sinigang ₱55, Burger ₱35. Open 6AM–8PM.',
+  scholarship:'🏆 Scholarship applications due March 30. Requirements at the Registrar\'s Office.',
+  marketplace:'🛒 Post items in the Marketplace channel. No prohibited items.',
+  default:'🤔 I\'m still learning! Try asking about: schedules, enrollment, library hours, grades, or the canteen.'
+};
+function sendAI(){
+  const inp=document.getElementById('aiInp');
+  const txt=inp.value.trim(); if(!txt) return; inp.value='';
+  const area=document.getElementById('aiArea');
+  area.innerHTML+=`<div class="ai-msg"><div class="ai-lbl u">You</div><div class="ai-txt">${escHtml(txt)}</div></div>`;
+  const key=Object.keys(aiDB).find(k=>txt.toLowerCase().includes(k));
+  setTimeout(()=>{
+    area.innerHTML+=`<div class="ai-msg"><div class="ai-lbl b">UniChain AI</div><div class="ai-txt">${aiDB[key||'default']}</div></div>`;
+    area.scrollTop=area.scrollHeight;
+  },600);
+  area.scrollTop=area.scrollHeight;
+}
+
+// ── Menu ──────────────────────────────────────────────────────────
+function openMenu(){ document.getElementById('menuPanel').classList.add('show'); document.getElementById('overlay').classList.add('show'); }
+function closeMenu(){ document.getElementById('menuPanel').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
+function closeMenuThenModal(id){ closeMenu(); setTimeout(()=>openModal(id),180); }
+
+// ── Modals ────────────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); }));
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg,ic='ℹ'){
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIc').textContent=ic;
+  const t=document.getElementById('toastEl'); t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ── Channel filter ────────────────────────────────────────────────
+function filterChannels(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.ch-item').forEach(item=>{
+    item.style.display=(!q||(item.dataset.name||'').toLowerCase().includes(q))?'':'none';
+  });
+}
+
+// ── Logout ────────────────────────────────────────────────────────
+async function doLogout(){
+  closeMenu(); toast('Signing out…','👋');
+  try{ await sb.auth.signOut(); }catch(e){}
+  setTimeout(()=>window.location.href='index.html',1100);
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-bg.show').forEach(m=>m.classList.remove('show'));
+    closeMenu();
+  }
+});
+</script>
+</body>
+</html>
